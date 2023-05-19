@@ -1,0 +1,321 @@
+@extends('admin.layout.master')
+@section('content')
+   <link rel="stylesheet" href=
+"https://cdn.datatables.net/1.10.22/css/jquery.dataTables.min.css" />
+  
+     <!-- jQuery library file -->
+     <script type="text/javascript" 
+     src="https://code.jquery.com/jquery-3.5.1.js">
+     </script>
+  
+      <!-- Datatable plugin JS library file -->
+     <script type="text/javascript" src=
+"https://cdn.datatables.net/1.10.22/js/jquery.dataTables.min.js">
+     </script>
+    <style>
+         div.dataTables_wrapper div.dataTables_length select {
+    width: 50%;
+}
+    </style>
+<?php 
+   $current_route = \Request::route()->getName();
+   $routeArr = explode('.', $current_route);
+   $section = $routeArr[0];
+   $action = $routeArr[1];
+
+   $data = App\Helpers\AdminHelper::checkAddButtonPermission($section,Auth::user()->id);
+   // $user_id = Request::get('user_id');
+   // $status = Request::get('status');
+?>
+
+  
+
+
+<div class="content-wrapper">
+   <div class="content-header">
+      <div class="container-fluid">
+         <div class="row mb-2">
+            <div class="col-sm-6">
+               <h1 class="m-0 text-dark">Equipment</h1>
+            </div>
+            <div class="col-sm-6">
+               <ol class="breadcrumb float-sm-right">
+                  <li class="breadcrumb-item"><a href="#">Home</a></li>
+                  <li class="breadcrumb-item active">Equipment List</li>
+               </ol>
+            </div>
+            </div>
+         </div>
+      </div>
+
+      <section class="content">
+         <div class="container-fluid">
+            <div class="row">
+               <div class="col-lg-12">
+                  <div class="card">
+                     @if(!empty($data['checkRole']) && (Auth::user()->user_type == 'admin' || !empty($data['checkPermission'])))
+                        <div class="card-header float-right">
+                           <a href="{{route('products.add')}}" class="btn btn-info float-right"><i class="fas fa-plus"></i> {{$data['actionData']->action_title}} </a>
+                        </div>
+                     @endif
+                     <div class="card-body">
+                        <form action="{{route('products.index')}}" method="GET">
+                           <div class="row">
+                              <div class="col-md-12">
+                                 <div class="row">
+                                   
+                                    <div class="col-3">
+                                       <div class="form-group">
+                                          <select class="select12 form-control clear" name="dealer_id" style="width: 100%;" data-placeholder="Select Dealer">
+                                             <option value="">Select Brands</option>
+                                             @foreach($dealers as $value)
+                                                <option value="{{$value->id}}" <?php if(!empty($dealer_id) && $dealer_id == $value->id){ echo "selected"; } ?> >{{$value->name}}</option>
+                                             @endforeach
+                                          </select>
+                                       </div>
+                                    </div>
+                                    <div class="col-3">
+                                    <div class="form-group">
+                                          <input type="text" name="model" class="form-control clear" placeholder="Model" value="<?php if(!empty($model)){echo $model; } ?>">
+                                       </div>
+                                    </div>
+                                    <div class="col-2">
+                                    <div class="form-group">
+                                          <input type="text" name="stock_number" class="form-control clear" placeholder="Serial Number" value="<?php if(!empty($stock_number)){echo $stock_number; } ?>">
+                                       </div>
+                                    </div>
+                                    
+                                      <div class="col-2">
+                                    <div class="form-group">
+                                          <input type="text" name="backorder_number" class="form-control clear" placeholder="Wholegood Number" value="<?php if(!empty($backorder_number)){echo $backorder_number; } ?>">
+                                       </div>
+                                    </div>
+                                    <div class="col-2">
+                                       <div class="form-group">
+                                          <input type="text" name="title" class="form-control clear" placeholder="Search Title" value="<?php if(!empty($title)){echo $title; } ?>">
+                                       </div>
+                                    </div>
+									   <div class="col-2">
+                                       <div class="form-group">
+                                        <select class="select12 form-control clear" name="status" style="width: 100%;" data-placeholder="Select Status">
+                                             <option value="">Select Status</option>
+                                             <option value="Coming Soon" <?php if(!empty($status) && $status == 'Coming Soon'){ echo "selected"; } ?> >Coming Soon</option>
+                                             <option value="In Stock" <?php if(!empty($status) && $status == 'In Stock'){ echo "selected"; } ?> >In Stock</option>
+                                             <option value="Sold" <?php if(!empty($status) && $status == 'Sold'){ echo "selected"; } ?> >Sold</option>
+                                             <option value="On Hire" <?php if(!empty($status) && $status == 'On Hire'){ echo "selected"; } ?> >On Hire</option>
+                                          </select>
+                                       </div>
+                                    </div>
+                                    <div class="col-1">
+                                       <div class="form-group">
+                                          <button type="submit" class="btn btn-info" style="width: 97%;">Search</button>
+                                       </div>
+                                    </div>
+									 <div class="col-1">
+                                       <div class="form-group">
+										  <button class='btn btn-danger clearAll'style="width: 97%;">Clear</button>
+
+									  </div>
+                                    </div>
+                                 </div>
+                              </div>
+                           </div>
+                        </form>
+                        <table id="tableID" class="display" style="width:100%" >
+                           <thead>
+                              <tr>
+                                 <th>Unit.No.</th>
+                                 <th>Type</th>
+                                 <th>Serial Number</th>
+                                 <th>Region</th>
+
+                                 <th>Category</th>
+                                 <th>Brands</th>
+                                 <!-- <th>Title</th> -->
+                                
+                                 <!-- <th>Wholegood Number</th> -->
+                                
+                                 <th>Model</th>
+                                 <th>Image</th>
+                                 <th>Year</th>
+                                 <th>Hours</th>
+                                 <th>Status</th>
+                                <!-- <th>Quantity Available</th> -->
+                                 <th>Action</th>
+                              </tr>
+                           </thead>
+                           
+                           @if(count($results)>0)
+                           <tbody class="tablecontents" id="tablecontents">
+                              <?php $i = 1; ?>
+                              @foreach($results as $key => $result)
+                              <?php 
+                                 $count = DB::table('products')->where('title',$result->title)->count();
+                                 $category = DB::table('categories')->where('id',$result->category_id)->first();
+                                 $dealer = DB::table('dealers')->where('id',$result->dealer_id)->first();
+                                 $image = DB::table('product_images')->where('product_id',$result->id)->first();
+                              ?>
+                              <tr class="row1" id="row1" data-id="{{ $result->id }}">
+                                 <td>{{$result->order_no}}</td>
+                                 <td>{{$result->type}}</td>
+                                 <td>{{$result->stock_number}}</td>
+                                 <td>{{$result->region}}</td>
+                                 <td>{{$category->name}}</td>
+                                 <td>{{$dealer->name}}</td>
+                                 <td>{{$result->title}}</td>
+                                 
+                                 <!-- <td>{{$result->backorder_number}}</td> -->
+                                 
+                                 <!-- <td>{{$result->model}}</td> -->
+                                 <td>
+                                    @if(!empty($image->image))
+                                       <ul class="list-inline"><li class="list-inline-item"><img style="width: 100px"; alt="Avatar" class="table-avatar" src="{{url('/public/admin/clip-one/assets/products/thumbnail')}}/{{$image->image}}"></li></ul>
+                                    @else
+                                       <ul class="list-inline"><li class="list-inline-item"><img alt="Avatar" class="table-avatar" src="{{url('/assets/no_image.jpg')}}" width="100px"></li></ul>
+                                    @endif
+                                 </td>
+                                 <td>{{$result->year}}</td>
+                                 <td>{{$result->hours}}</td>
+                                 <td>{{$result->status}}</td>
+                                 <!-- <td style="text-align: center;">{{$count}}</td>  -->
+                                 <td>
+                                    @foreach ($action_ids as $key1 => $action_id) 
+                                       <?php $action = DB::table('actions')->where('id',$action_id)->first(); ?>
+                                       @if ($action->action_slug == 'edit' || $action->action_slug == 'delete' || $action->action_slug == 'view')
+                                          <a href="{{route('products.'.$action->action_slug,$result->id)}}" class="btn btn-{{$action->class}} btn-sm" data-placement="top" data-original-title="{{$action->action_title}}" style="width: 70px; margin-top: 5px;" ><i class="{{$action->icon}}"></i>{{$action->action_title}}</a>&nbsp;
+                                       @endif
+                                    @endforeach
+                                      
+                                 </td>
+                              </tr>
+                              <?php $i++; ?>
+                              
+                                 @section('script')
+                                 @if (empty($category_id) && empty($dealer_id) && empty($status) && empty($title))                          
+                                    <script type="text/javascript">
+                                       $(function () {
+                                          $( "#tablecontents" ).sortable({
+                                             items: "tr",
+                                             cursor: 'move',
+                                             opacity: 0.9,
+                                             update: function() {
+                                                sendOrderToServer();
+                                             }
+                                          });
+
+                                          function sendOrderToServer() {  
+                                             var order = [];
+                                             $('tr.row1').each(function(index,element) {
+                                                order.push({
+                                                   id: $(this).attr('data-id'),
+                                                   position: index+1
+                                                });
+                                             });
+
+                                             $.ajax({
+                                                type: "POST", 
+                                                dataType: "json", 
+                                                url: "{{url('admin/products/sortProducts')}}",
+                                                data: {
+                                                   order:order,
+                                                   _token: '{{csrf_token()}}'
+                                                },
+                                                success: function(response) {
+                                                   if (response.status == "success") {
+                                                      toastr.success("Sorted successfuly.",'Success');
+                                                      location.reload();
+                                                   } else {
+                                                      toastr.error("Try Again!",'Error');
+                                                      location.reload();
+                                                   }
+                                                }
+                                             });
+                                          }
+                                       });
+                                    </script>
+                                 @endif
+                                 
+                                 @endsection
+                              @endforeach
+                           </tbody>
+                           @endif
+                        </table>
+ 
+    <script>
+    $(document).ready(function() {
+    $('#tableID').DataTable( {
+        dom: 'Bfrtip',
+        buttons: [
+            // {
+            //     extend: 'excelHtml5',
+            //     text : 'Export to CSV',
+            //     title: 'Data export'
+            // },
+            {
+                extend: 'csvHtml5',
+                text : 'Export',
+                title: 'Product export'
+            }
+        ]
+    } );
+} );
+</script>
+                        <!-- Add more modal -->
+                        <div class="modal fade" id="modal-default">
+                           <div class="modal-dialog">
+                              <div class="modal-content">
+                                 <div class="modal-header">
+                                    <h4 class="modal-title">Add More Machines</h4>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span>
+                                    </button>
+                                 </div>
+                                 <form id="quickForm" action="{{route('products.add_more')}}" method="POST" enctype="multipart/form-data" >
+                                    {{csrf_field()}}
+                                    <input type="hidden" name="id" id="product_id" value="">
+
+                                    <div class="modal-body">
+
+                                       <div id="addDivA">
+                                          <div class="row">
+                                             <div class="col-md-6">
+                                                <div class="form-group">
+                                                   <label for="stock_quantity">Stock Quantity</label>
+                                                   <input type="number" name="stock_quantity" class="form-control" id="stock_quantityA" min="1" value="1" placeholder="Stock Quantity" >
+                                                </div>
+                                             </div>
+
+                                             <div class="col-md-6">
+                                                <div class="form-group">
+                                                   <label for="stock_number">Serial Number</label>
+                                                   <input type="text" name="stock_number[]" class="form-control stock_number" id="stock_number"  placeholder="Serial Number" >
+                                                </div>
+                                             </div>
+                                          </div>
+                                       </div>
+                                       
+                                    </div>
+                                    <div class="modal-footer justify-content-between">
+                                       <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                                       <button type="submit" class="btn btn-primary">Save changes</button>
+                                    </div>
+                                 </form>
+                              </div>
+                           </div>
+                        </div>
+                        <!-- Add more modal -->
+                     </div>
+                  </div>
+               </div>
+            </div>
+         </div>
+      </section>
+   </div>
+</div>
+@endsection
+@section('script')
+
+<script>$('.clearAll').on('click', function() {
+  $('.clear').val([]);
+});</script>
+
+@endsection
